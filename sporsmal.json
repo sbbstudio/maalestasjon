@@ -1,0 +1,22 @@
+{
+  "laast": "2026-09-19",
+  "maaler": "Hvilke nettsteder AI-motorene oppgir som kilde. Ikke hvilket sted som rangeres hvor: listene er for ustabile til det.",
+  "byer": ["Stockholm", "Göteborg"],
+  "sporsmal": [
+    { "id": "julbord", "tekst": "Var kan man äta ett bra julbord i {by} i år?" }
+  ],
+  "motorer": [
+    { "id": "openai", "modell": "openai/gpt-chat-latest" },
+    { "id": "anthropic", "modell": "anthropic/claude-sonnet-5" },
+    { "id": "perplexity", "modell": "perplexity/sonar", "innebygdSok": true },
+    { "id": "xai", "modell": "x-ai/grok-4.6", "gjentak": 10 }
+  ],
+  "gjentak": 30,
+  "folg": [],
+  "ord": [],
+  "toppliste": false,
+  "utelatt": {
+    "google": "Gemini API-vilkårene (Grounding with Google Search, Use Restrictions) forbyr å lagre, analysere eller samle lenker programmatisk. Sjekket mot originalteksten 19.09.2026. Google måles ikke.",
+    "krympet": "Fra 5 byer × 6 spørsmål × 5 gjentak til 2 byer × ett spørsmål × 30 gjentak = 240 kall. Færre variabler, flere gjentak."
+  }
+}
