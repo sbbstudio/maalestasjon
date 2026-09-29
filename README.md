@@ -16,7 +16,7 @@ node kjor.mjs --full --tak 40     # hele listen, stoppgrense 40 USD (betalt, kre
 node uttrekk.mjs                  # skriver data/rapport.md fra loggen
 ```
 
-Krever Node.js 20 eller nyere. Sett `OPENROUTER_API_KEY` i miljøet eller i en `.env`-fil i repoets rot. Miljøvariabelen har prioritet. Kjøringene bruker betalte API-er. `data/` opprettes automatisk og holdes utenfor Git.
+Krever Node.js 20.6 eller nyere. Sett `OPENROUTER_API_KEY` i miljøet eller i en `.env`-fil i repoets rot. Miljøvariabelen har prioritet. Kjøringene bruker betalte API-er. `data/` opprettes automatisk og holdes utenfor Git.
 
 Kostnadstaket sjekkes etter fullførte kall; opptil fire samtidige kall kan gjøre at sluttkostnaden overstiger taket. Manglende kostnad stopper nye kall fremfor å bli regnet som gratis. Taket gjelder kjent kostnad i hele loggen, inkludert røyktester; det er ikke en fakturagaranti. Nøkkelen skrives aldri til logg eller skjerm.
 
