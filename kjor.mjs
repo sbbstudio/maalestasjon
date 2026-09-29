@@ -1,22 +1,24 @@
 #!/usr/bin/env node
-// AI-målestasjon, pilot. Spør fem motorer (via OpenRouter, motorens eget nettsøk)
+// AI-målestasjon, pilot. Spør motorene i oppsettet (via OpenRouter, motorens eget nettsøk)
 // om restauranter i svenske byer og logger svar + kildeliste.
-// Bruk:  node kjor.mjs --royk            (ett spørsmål × fem motorer, ett gjentak)
+// Bruk:  node kjor.mjs --royk            (ett spørsmål × motorene i oppsettet, ett gjentak)
 //        node kjor.mjs --full --tak 40   (hele listen, stopper ved kostnadstak i USD)
-// Nøkkelen leses fra ~/intervju/.env og skrives aldri ut.
-import { readFileSync, appendFileSync, existsSync } from 'node:fs';
+// Nøkkelen leses fra repoets .env og skrives aldri ut.
+import { readFileSync, appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HER = dirname(fileURLToPath(import.meta.url));
-const ENV = join(HER, '..', '..', '.env');
+const ENV = join(HER, '.env');
 const UT = join(HER, 'data', 'kall.jsonl');
 const arg = process.argv.slice(2);
 const ROYK = arg.includes('--royk');
 const FULL = arg.includes('--full');
-const TAK = Number(arg[arg.indexOf('--tak') + 1]) || (ROYK ? 1 : 40);
+const takPos = arg.indexOf('--tak');
+const TAK = takPos < 0 ? (ROYK ? 1 : 40) : Number(arg[takPos + 1]);
 const SAMTIDIG = 4;
 
+if (!Number.isFinite(TAK) || TAK <= 0) { console.error('--tak må være et positivt, endelig tall'); process.exit(2); }
 if (ROYK === FULL) { console.error('Velg --royk eller --full'); process.exit(2); }
 
 function nokkel() {
@@ -26,20 +28,24 @@ function nokkel() {
   return m ? m[1].trim().replace(/^["']|["']$/g, '') : null;
 }
 const KEY = nokkel();
-if (!KEY) { console.error('STOPP: fant ikke OPENROUTER_API_KEY i ~/intervju/.env'); process.exit(3); }
+if (!KEY) { console.error('STOPP: fant ikke OPENROUTER_API_KEY i repoets .env'); process.exit(3); }
 
 const cfg = JSON.parse(readFileSync(join(HER, 'sporsmal.json'), 'utf8'));
 const ferdig = new Set();
-let brukt = 0;
+let brukt = 0, ukjentKostnad = false;
 if (existsSync(UT)) for (const l of readFileSync(UT, 'utf8').split('\n')) {
   if (!l) continue;
   const r = JSON.parse(l);
-  if (r.ok) { ferdig.add(r.nokkel); brukt += r.kostnad || 0; }
+  if (r.ok) {
+    ferdig.add(r.nokkel);
+    if (typeof r.kostnad !== 'number' || !Number.isFinite(r.kostnad) || r.kostnad < 0) ukjentKostnad = true;
+    else brukt += r.kostnad;
+  }
 }
 
 const jobber = [];
 const byer = ROYK ? cfg.byer.slice(0, 1) : cfg.byer;
-const spm = ROYK ? cfg.sporsmal.filter(s => s.id === 'julbord') : cfg.sporsmal;
+const spm = ROYK ? cfg.sporsmal.slice(0, 1) : cfg.sporsmal;
 // En motor kan ha eget antall gjentak (dyre motorer kjøres færre ganger).
 const antall = m => ROYK ? 1 : (m.gjentak ?? cfg.gjentak);
 for (const by of byer) for (const s of spm) for (const m of cfg.motorer) for (let g = 1; g <= antall(m); g++) {
@@ -54,6 +60,7 @@ async function kall(j, forsok = 1) {
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
+      signal: AbortSignal.timeout(90_000),
       headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json', 'X-Title': 'maalestasjon-pilot' },
       body: JSON.stringify({
         model: j.m.modell,
@@ -69,8 +76,9 @@ async function kall(j, forsok = 1) {
       return kall(j, forsok + 1);
     }
     const d = await res.json();
-    if (!res.ok || d.error) throw new Error(`${res.status} ${JSON.stringify(d.error || d).slice(0, 300)}`);
-    const msg = d.choices?.[0]?.message || {};
+    if (!res.ok || d.error) throw new Error(`${res.status} API-et avviste kallet`);
+    const msg = d.choices?.[0]?.message;
+    if (typeof msg?.content !== 'string' || !msg.content.trim()) throw new Error('API-et returnerte ikke svartekst');
     let kilder = (msg.annotations || []).filter(a => a.type === 'url_citation')
       .map(a => ({ url: a.url_citation.url, tittel: a.url_citation.title || null }));
     if (!kilder.length && Array.isArray(d.citations)) kilder = d.citations.map(u => ({ url: u, tittel: null }));
@@ -79,18 +87,25 @@ async function kall(j, forsok = 1) {
       kostnad: d.usage?.cost ?? null, tokens: d.usage?.total_tokens ?? null, ms: Date.now() - start };
   } catch (e) {
     return { ok: false, nokkel: j.nk, tid: new Date().toISOString(), motor: j.m.id, by: j.by,
-      sporsmalId: j.s.id, gjentak: j.g, feil: String(e.message).slice(0, 400) };
+      sporsmalId: j.s.id, gjentak: j.g, feil: String(e.message).replaceAll(KEY, '[skjult]').slice(0, 400) };
   }
 }
 
-let stopp = false, ok = 0, feil = 0;
+mkdirSync(dirname(UT), { recursive: true });
+let stopp = brukt >= TAK || ukjentKostnad, ok = 0, feil = 0;
+if (ukjentKostnad) console.error('STOPP: loggen har svar uten kjent kostnad; avklar kostnaden før flere kall.');
+else if (stopp) console.log('STOPP: kostnadstaket er allerede nådd.');
 async function arbeider() {
   while (jobber.length && !stopp) {
     const j = jobber.shift();
     const r = await kall(j);
     appendFileSync(UT, JSON.stringify(r) + '\n');
-    if (r.ok) { ok++; brukt += r.kostnad || 0;
-      console.log(`ok  ${r.motor.padEnd(10)} ${r.by.padEnd(10)} ${r.sporsmalId.padEnd(10)} #${r.gjentak} · ${r.kilder.length} kilder · ${(r.kostnad ?? 0).toFixed(4)} USD`);
+    if (r.ok) { ok++;
+      if (typeof r.kostnad !== 'number' || !Number.isFinite(r.kostnad) || r.kostnad < 0) {
+        stopp = true; ukjentKostnad = true;
+        console.error('STOPP: API-et oppga ikke gyldig kostnad; ingen nye kall startes.');
+      } else brukt += r.kostnad;
+      console.log(`ok  ${r.motor.padEnd(10)} ${r.by.padEnd(10)} ${r.sporsmalId.padEnd(10)} #${r.gjentak} · ${r.kilder.length} kilder · ${typeof r.kostnad === 'number' ? r.kostnad.toFixed(4) : 'ukjent'} USD`);
     } else { feil++; console.log(`FEIL ${r.motor} ${r.by} ${r.sporsmalId}: ${r.feil}`); }
     // Tom konto eller ugyldig nøkkel: stopp straks, ikke brenn gjennom køen.
     if (!r.ok && /^(401|402|403) /.test(r.feil)) { stopp = true; console.log('STOPP: kontoen avviser kall (kreditt eller nøkkel)'); }
@@ -99,3 +114,5 @@ async function arbeider() {
 }
 await Promise.all(Array.from({ length: SAMTIDIG }, arbeider));
 console.log(`\nFerdig: ${ok} ok · ${feil} feil · brukt totalt ${brukt.toFixed(2)} USD · ${jobber.length} kall gjenstår`);
+
+if (feil || stopp) process.exitCode = 1;

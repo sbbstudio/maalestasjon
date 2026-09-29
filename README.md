@@ -4,13 +4,13 @@ Et lite måleapparat for ett spørsmål: **hvilke nettsteder oppgir AI-motorer s
 
 Ikke hvilken bedrift som «rangerer først» — det tallet finnes ikke, fordi listene er for ustabile. Se [Hva den ikke måler](#hva-den-ikke-måler).
 
-Bygget på en helg i september 2026. 204 svar, fire motorer, to byer, 12,58 USD.
+Bygget på en helg i september 2026. 200 svar i fullmålingen, fire motorer, to byer, 12,58 USD.
 
 ---
 
 ## Hvordan den er satt sammen
 
-Tre filer, 224 linjer til sammen.
+Tre filer utgjør måleriggen.
 
 | Fil | Hva den gjør |
 |---|---|
@@ -22,19 +22,21 @@ Innsamling og analyse er **skilt**. Det betyr at analysen kan kjøres på nytt m
 
 ```bash
 node kjor.mjs --royk              # ett spørsmål, én runde, for å se at riggen lever
-node kjor.mjs --full --tak 40     # hele listen, stopper ved 40 USD
-node uttrekk.mjs                  # skriver resultat.md fra loggen
+node kjor.mjs --full --tak 40     # hele listen, stoppgrense 40 USD
+node uttrekk.mjs                  # skriver data/rapport.md fra loggen
 ```
 
-Nøkkelen leses fra `.env` og skrives aldri til logg eller skjerm.
+Krever Node.js 20 eller nyere. Sett `OPENROUTER_API_KEY` i miljøet eller i en `.env`-fil i repoets rot. Miljøvariabelen har prioritet. Kjøringene bruker betalte API-er. `data/` opprettes automatisk og holdes utenfor Git.
+
+Kostnadstaket sjekkes etter fullførte kall; opptil fire samtidige kall kan gjøre at sluttkostnaden overstiger taket. Manglende kostnad stopper nye kall fremfor å bli regnet som gratis. Taket gjelder kjent kostnad i hele loggen, inkludert røyktester; det er ikke en fakturagaranti. Nøkkelen skrives aldri til logg eller skjerm.
 
 ---
 
 ## Fire valg som betyr noe
 
-**Oppsettet er låst før kjøring.** Spørsmål, byer, motorer og antall gjentak står i `sporsmal.json` med en `laast`-dato. Man kan ikke justere spørsmålet underveis til tallene blir pene.
+**Oppsettet er låst før kjøring.** Spørsmål, byer, motorer og antall gjentak står i `sporsmal.json` med en `laast`-dato. Dette er en metodeavtale, ikke en teknisk lås. Endrer du oppsettet, arkiver `data/` og start en ny måling; gamle og nye oppsett skal ikke dele logg.
 
-**Kjøringen kan gjenopptas.** `kjor.mjs` leser ferdige kall fra loggen før den starter, og hopper over dem. Krasjer den på kall 180 av 240, koster det ingenting å starte igjen.
+**Kjøringen kan gjenopptas.** `kjor.mjs` leser ferdige kall fra loggen før den starter, og hopper over dem. Svar som allerede er lagret som vellykkede, kjøres ikke på nytt. Et kall som ble fakturert før en krasj, men ikke rakk å bli logget, kan bli gjentatt. Kjør bare én innsamler om gangen mot samme logg.
 
 **Det finnes et kostnadstak.** `--tak` er i dollar. Riggen stopper selv. En løpsk løkke mot fire betalte API-er er en dyr måte å lære det på.
 
@@ -50,7 +52,7 @@ Dette avsnittet er like viktig som resten.
 
 **Ikke Google.** Gemini-vilkårene (Grounding with Google Search, Use Restrictions) forbyr å lagre, analysere eller samle lenker programmatisk. Sjekket mot originalteksten 19.09.2026. Google måles ikke — ikke fordi det er uinteressant, men fordi vilkårene sier nei.
 
-**Ikke uavhengige gjentak.** Se stabilitetstabellen i [resultat.md](resultat.md): Perplexity ligger på 1,00. Motoren cacher søket sitt, så 60 svar er to kildelister, ikke seksti uavhengige. Tallet står der fordi det svekker min egen måling.
+**Ikke uavhengige gjentak.** Se stabilitetstabellen i [resultat.md](resultat.md): Perplexity ligger på 1,00. Kildedomenene er svært like mellom gjentak (1,00 i Stockholm, 0,98 i Göteborg). Dette er forenlig med caching, men målingen alene fastslår ikke årsaken eller at gjentakene er uavhengige. Tallet står der fordi det svekker min egen måling.
 
 **Ikke en årsak.** At et domene oppgis som kilde sier ingenting om hvorfor. Ikke om indeksstatus, ikke om tillit, ikke om kvalitet. «Oppga som kilde» — ikke «leste».
 
@@ -60,9 +62,9 @@ Dette avsnittet er like viktig som resten.
 
 ## Resultatet
 
-[resultat.md](resultat.md) er generert av `uttrekk.mjs` fra det låste oppsettet i dette repoet.
+[resultat.md](resultat.md) er den publiserte rapporten fra pilotkjøringen. Råloggen følger ikke med i dette repoet, så pilotens tall kan ikke reproduseres fra klonen alene. Kjør `kjor.mjs` for å samle egne data og `uttrekk.mjs` for å analysere dem; nye målinger kan gi andre tall. Analysen skriver `data/rapport.md`, slik at den publiserte pilotrapporten bevares.
 
-Den korte versjonen: motorene er ikke i nærheten av hverandre. Snittet på antall kilder per svar spenner fra 5,8 til 20,0. Og stabiliteten fra kjøring til kjøring spenner fra 0,23 til 1,00 — én motor gir nesten en ny kildeliste hver gang, en annen gir deg den samme lista uansett hvor mange ganger du spør.
+Den korte versjonen: motorene er ikke i nærheten av hverandre. Snittet på antall kilder per svar spenner fra 5,8 til 20,0. Og stabiliteten fra kjøring til kjøring spenner fra 0,23 til 1,00 — én motor varierer mye mellom gjentak, mens en annen gir nesten identiske kildedomener i denne målingen.
 
 Det betyr at «hvordan ser vi ut i AI-svar» ikke har ett svar. Det har ett svar per motor, og noen av dem er ikke stabile nok til å ha et svar i det hele tatt.
 
@@ -79,5 +81,13 @@ Bytt `sporsmal.json`. Ingenting om et domene eller en bransje ligger i koden.
 De tre står tomme i dette repoet med vilje. Riggen ble bygget for en konkret sak, og resultatene om andres nettsteder hører hjemme i den samtalen — ikke her.
 
 ---
+
+## Lokal QC
+
+```bash
+node --test tests/qc.test.mjs
+```
+
+Testene bruker midlertidige mapper og simulerte API-svar. Ingen nettverk, API-nøkler eller betalte kall trengs. De sjekker oppstart, gjenopptak, kostnadsstopp og rapportering.
 
 MIT. Rune Øverland — [runeoverland.no](https://runeoverland.no)
