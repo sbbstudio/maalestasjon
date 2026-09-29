@@ -75,7 +75,7 @@ Dette avsnittet er like viktig som resten.
 
 **Ikke Google.** Gemini-vilkårene (Grounding with Google Search, Use Restrictions) forbyr å lagre, analysere eller samle lenker programmatisk. Sjekket mot originalteksten 19.09.2026. Google måles ikke — ikke fordi det er uinteressant, men fordi vilkårene sier nei.
 
-**Ikke uavhengige gjentak.** Se stabilitetstabellen i [resultat.md](resultat.md): Perplexity ligger på 1,00. Kildedomenene er svært like mellom gjentak (1,00 i Stockholm, 0,98 i Göteborg). Dette er forenlig med caching, men målingen alene fastslår ikke årsaken eller at gjentakene er uavhengige. Tallet står der fordi det svekker min egen måling.
+**Ikke uavhengige gjentak.** Se stabilitetstabellen i [resultat.md](resultat.md): Perplexity ligger på 1,00 i Stockholm og 0,98 i Göteborg. Kildedomenene er svært like mellom gjentak. Dette er forenlig med caching, men målingen alene fastslår ikke årsaken eller at gjentakene er uavhengige. Tallet står der fordi det svekker min egen måling.
 
 **Ikke en årsak.** At et domene oppgis som kilde sier ingenting om hvorfor. Ikke om indeksstatus, ikke om tillit, ikke om kvalitet. «Oppga som kilde» — ikke «leste».
 
