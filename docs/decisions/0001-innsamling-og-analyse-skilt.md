@@ -4,6 +4,8 @@
 
 **Status:** Vedtatt
 
+Beslutningen ble tatt da oppsettet ble låst 2026-09-19 (sporsmal.json, `laast`); dokumentert her 2026-09-29.
+
 ## Beslutning
 
 Innsamling og analyse ligger i hver sin fil. `kjor.mjs` stiller spørsmålene og logger hvert kall rått som én linje i `data/kall.jsonl`. `uttrekk.mjs` leser bare loggen og skriver rapporten. Rapporten er avledet, aldri kilden.
