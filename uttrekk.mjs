@@ -2,7 +2,7 @@
 // Målestasjon — uttrekk. Leser data/kall.jsonl (kun full kjøring) og skriver data/rapport.md.
 // Måler kildedomener, ikke restaurantrang.
 // Bruk:  node uttrekk.mjs
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -14,9 +14,12 @@ const FOLG = cfg.folg ?? [];
 const ORD = cfg.ord ?? [];
 const TOPPLISTE = cfg.toppliste === true;
 
-const rader = readFileSync(join(HER, 'data/kall.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+const logg = join(HER, 'data/kall.jsonl');
+if (!existsSync(logg)) { console.error('Ingen rålogg. Kjør node kjor.mjs --full først.'); process.exit(1); }
+const rader = readFileSync(logg, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
 const full = rader.filter(r => r.nokkel.startsWith('full|'));
 const ok = full.filter(r => r.ok);
+if (!ok.length) { console.error('Ingen vellykkede svar fra full kjøring å analysere.'); process.exit(1); }
 // Et kall som feilet og senere ble kjørt på nytt med hell, regnes ikke som feil.
 const lyktes = new Set(ok.map(r => r.nokkel));
 const feil = full.filter(r => !r.ok && !lyktes.has(r.nokkel));
@@ -36,6 +39,7 @@ function likhet(utvalg) {
   let sum = 0, n = 0;
   for (let i = 0; i < utvalg.length; i++) for (let j = i + 1; j < utvalg.length; j++) {
     const a = new Set(utvalg[i].dom), b = new Set(utvalg[j].dom);
+    if (utvalg[i].sporsmalId !== utvalg[j].sporsmalId) continue;
     const snitt = [...a].filter(x => b.has(x)).length, union = new Set([...a, ...b]).size;
     if (union) { sum += snitt / union; n++; }
   }
@@ -43,8 +47,10 @@ function likhet(utvalg) {
 }
 
 let ut = `# Målestasjon — helgepilot\n\n`;
-ut += `Kjørt ${ok[0]?.tid.slice(0, 10) ?? '?'}. ${ok.length} svar, ${feil.length} feil. Kostnad ${ok.reduce((s, r) => s + (r.kostnad || 0), 0).toFixed(2)} USD.\n\n`;
-ut += `**Spørsmål:** «${ok[0]?.sporsmal.replace(byer[0], '{by}')}»\n\n`;
+ut += `Kjørt ${ok[0]?.tid.slice(0, 10) ?? '?'}. ${ok.length} svar, ${feil.length} feil. Kostnad ${ok.reduce((s, r) => s + (typeof r.kostnad === 'number' && Number.isFinite(r.kostnad) && r.kostnad >= 0 ? r.kostnad : 0), 0).toFixed(2)} USD.\n\n`;
+ut += `**Spørsmål:** ${[...new Set(ok.map(r => r.sporsmal.replace(r.by, '{by}')))].map(s => `«${s}»`).join('; ')}\n\n`;
+if (ok.some(r => typeof r.kostnad !== 'number' || !Number.isFinite(r.kostnad) || r.kostnad < 0))
+  ut += '**Kostnaden er ufullstendig:** noen svar mangler gyldig kostnad. Tallet over summerer bare kjente kostnader.\n\n';
 ut += `**Metode:** hvert spørsmål stilt på nytt uten historikk, via motorenes utviklerinngang med eget nettsøk slått på. Vi teller hvilke nettsteder svarene oppgir som kilde. Dette er ikke det samme som appen gjestene bruker. Google er ikke målt (vilkårene tillater det ikke).\n\n`;
 
 ut += `## Svar per motor\n\n| Motor | Modell | Svar | Snitt kilder | Svar uten kilder |\n|---|---|---|---|---|\n`;
@@ -80,7 +86,7 @@ for (const m of motorer) ut += `| ${m} | ${byer.map(by => { const l = likhet(ok.
 
 if (ORD.length) ut += `\n## Nevnt i selve svarteksten\n\n| Ord | ${motorer.join(' | ')} |\n|---|${motorer.map(() => '---').join('|')}|\n`;
 for (const ord of ORD) {
-  ut += `| ${ord} | ${motorer.map(m => { const u = ok.filter(r => r.motor === m); return `${u.filter(r => r.svar.toLowerCase().includes(ord)).length}/${u.length}`; }).join(' | ')} |\n`;
+  ut += `| ${ord} | ${motorer.map(m => { const u = ok.filter(r => r.motor === m); return `${u.filter(r => r.svar.toLowerCase().includes(ord.toLowerCase())).length}/${u.length}`; }).join(' | ')} |\n`;
 }
 
 if (feil.length) {
