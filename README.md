@@ -1,14 +1,41 @@
 # Målestasjon
 
+## Hva dette er
+
 Et lite måleapparat for ett spørsmål: **hvilke nettsteder oppgir AI-motorer som kilde når noen spør dem om noe lokalt?**
 
 Ikke hvilken bedrift som «rangerer først» — det tallet finnes ikke, fordi listene er for ustabile. Se [Hva den ikke måler](#hva-den-ikke-måler).
 
 Bygget på en helg i september 2026. 200 svar i fullmålingen, fire motorer, to byer, 12,58 USD.
 
----
+## Slik kjører du det
 
-## Hvordan den er satt sammen
+```bash
+node kjor.mjs --royk              # ett spørsmål, én runde, for å se at riggen lever
+node kjor.mjs --full --tak 40     # hele listen, stoppgrense 40 USD
+node uttrekk.mjs                  # skriver data/rapport.md fra loggen
+```
+
+Krever Node.js 20 eller nyere. Sett `OPENROUTER_API_KEY` i miljøet eller i en `.env`-fil i repoets rot. Miljøvariabelen har prioritet. Kjøringene bruker betalte API-er. `data/` opprettes automatisk og holdes utenfor Git.
+
+Kostnadstaket sjekkes etter fullførte kall; opptil fire samtidige kall kan gjøre at sluttkostnaden overstiger taket. Manglende kostnad stopper nye kall fremfor å bli regnet som gratis. Taket gjelder kjent kostnad i hele loggen, inkludert røyktester; det er ikke en fakturagaranti. Nøkkelen skrives aldri til logg eller skjerm.
+
+### Lokal QC
+
+```bash
+node --test tests/qc.test.mjs
+```
+
+Testene bruker midlertidige mapper og simulerte API-svar. Ingen nettverk, API-nøkler eller betalte kall trengs. De sjekker oppstart, gjenopptak, kostnadsstopp og rapportering.
+
+## Mappene
+
+- `tests/` — QC-testene for `kjor.mjs` og `uttrekk.mjs` (`node --test tests/qc.test.mjs`).
+- `docs/` — `docs/decisions/`, én fil per beslutning om repoet.
+- `.github/` — CI-workflow, PR-mal og kodeeiere.
+- `data/` — rålogg og rapport fra egne kjøringer. Opprettes automatisk og spores ikke i Git.
+
+### Hvordan den er satt sammen
 
 Tre filer utgjør måleriggen.
 
@@ -20,15 +47,11 @@ Tre filer utgjør måleriggen.
 
 Innsamling og analyse er **skilt**. Det betyr at analysen kan kjøres på nytt mot de samme rådataene og gi samme tall — av hvem som helst, når som helst.
 
-```bash
-node kjor.mjs --royk              # ett spørsmål, én runde, for å se at riggen lever
-node kjor.mjs --full --tak 40     # hele listen, stoppgrense 40 USD
-node uttrekk.mjs                  # skriver data/rapport.md fra loggen
-```
+## Regler og beslutninger
 
-Krever Node.js 20 eller nyere. Sett `OPENROUTER_API_KEY` i miljøet eller i en `.env`-fil i repoets rot. Miljøvariabelen har prioritet. Kjøringene bruker betalte API-er. `data/` opprettes automatisk og holdes utenfor Git.
-
-Kostnadstaket sjekkes etter fullførte kall; opptil fire samtidige kall kan gjøre at sluttkostnaden overstiger taket. Manglende kostnad stopper nye kall fremfor å bli regnet som gratis. Taket gjelder kjent kostnad i hele loggen, inkludert røyktester; det er ikke en fakturagaranti. Nøkkelen skrives aldri til logg eller skjerm.
+- Lokale regler for mennesker og agenter: [`AGENTS.md`](AGENTS.md). Felles regler: byggestandarden i always-agents.
+- Beslutninger: [`docs/decisions/`](docs/decisions/), én fil per beslutning.
+- Endringer: [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
@@ -81,13 +104,5 @@ Bytt `sporsmal.json`. Ingenting om et domene eller en bransje ligger i koden.
 De tre står tomme i dette repoet med vilje. Riggen ble bygget for en konkret sak, og resultatene om andres nettsteder hører hjemme i den samtalen — ikke her.
 
 ---
-
-## Lokal QC
-
-```bash
-node --test tests/qc.test.mjs
-```
-
-Testene bruker midlertidige mapper og simulerte API-svar. Ingen nettverk, API-nøkler eller betalte kall trengs. De sjekker oppstart, gjenopptak, kostnadsstopp og rapportering.
 
 MIT. Rune Øverland — [runeoverland.no](https://runeoverland.no)
