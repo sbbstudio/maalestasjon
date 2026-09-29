@@ -11,8 +11,8 @@ Bygget på en helg i september 2026. 200 svar i fullmålingen, fire motorer, to 
 ## Slik kjører du det
 
 ```bash
-node kjor.mjs --royk              # ett spørsmål, én runde, for å se at riggen lever
-node kjor.mjs --full --tak 40     # hele listen, stoppgrense 40 USD
+node kjor.mjs --royk              # ett spørsmål, én runde, for å se at riggen lever (betalt, krever nøkkel)
+node kjor.mjs --full --tak 40     # hele listen, stoppgrense 40 USD (betalt, krever nøkkel)
 node uttrekk.mjs                  # skriver data/rapport.md fra loggen
 ```
 
