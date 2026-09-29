@@ -15,4 +15,7 @@ Merkbare endringer i Målestasjon føres her. Formatet følger [Keep a Changelog
 ### Endret
 
 - `kjor.mjs`: kostnadstaket valideres, ukjent kostnad stopper nye kall, kall har tidsavbrudd, nøkkelen maskeres i loggen, og `.env` leses fra repoets rot.
+- `kjor.mjs`: tom svartekst logges som feil, API-ets feilmelding logges ikke lenger (bare statuskoden), og skriptet avslutter med kode 1 ved feil eller stopp.
+- `kjor.mjs`: røyktesten bruker første spørsmål i oppsettet, ikke et fast spørsmål.
 - `uttrekk.mjs`: tåler manglende logg og stopper når det ikke finnes vellykkede svar fra full kjøring.
+- `uttrekk.mjs`: stabiliteten sammenligner bare svar på samme spørsmål, ugyldig kostnad telles som 0 med en merknad i rapporten, alle spørsmål listes i rapporten, og ordtellingen skiller ikke mellom store og små bokstaver.
