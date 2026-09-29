@@ -4,7 +4,7 @@
 
 **Status:** Vedtatt
 
-Skillet finnes i repoets første commit 5555cde (2026-09-21); pilotrapporten resultat.md er kjørt 2026-09-19 med de samme to filene. Dokumentert her 2026-09-29.
+Skillet finnes i repoets første commit 5555cde (2026-09-21); pilotrapporten resultat.md er kjørt 2026-09-19. Dokumentert her 2026-09-29.
 
 ## Beslutning
 

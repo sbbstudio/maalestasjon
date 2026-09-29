@@ -95,7 +95,7 @@ Det betyr at «hvordan ser vi ut i AI-svar» ikke har ett svar. Det har ett svar
 
 ## Å bruke den på noe annet
 
-Bytt `sporsmal.json`. Oppsettet ligger i `sporsmal.json`. Rapportens faste tekst og kommentarene i `kjor.mjs` er skrevet for restaurantpiloten og må byttes hvis riggen brukes på noe annet.
+Bytt `sporsmal.json`. Rapportens faste tekst og kommentarene i `kjor.mjs` er skrevet for restaurantpiloten og må byttes hvis riggen brukes på noe annet.
 
 - `folg` — domener du vil følge. Tom liste, og avsnittet faller bort.
 - `ord` — ord å telle i selve svarteksten.
