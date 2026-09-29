@@ -17,6 +17,6 @@
   "toppliste": false,
   "utelatt": {
     "google": "Gemini API-vilkårene (Grounding with Google Search, Use Restrictions) forbyr å lagre, analysere eller samle lenker programmatisk. Sjekket mot originalteksten 19.09.2026. Google måles ikke.",
-    "krympet": "Fra 5 byer × 6 spørsmål × 5 gjentak til 2 byer × ett spørsmål × 30 gjentak = 240 kall. Færre variabler, flere gjentak."
+    "krympet": "Fra 5 byer × 6 spørsmål × 5 gjentak til 2 byer × ett spørsmål × 30 gjentak = 200 kall (xai kjøres 10 ganger). Færre variabler, flere gjentak."
   }
 }
