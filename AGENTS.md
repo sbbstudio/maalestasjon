@@ -23,7 +23,7 @@ Måleriggen:
 Oppsett:
 
 - `.gitignore` — holder `data/`, `node_modules/` og `.env` utenfor Git.
-- `.prettierrc` — formatinnstillinger.
+- `.prettierrc` — formatinnstillinger som følger koden: semikolon, enkle anførselstegn, 100 kolonner.
 - `.editorconfig` — editorstandard: UTF-8, LF, to mellomrom, trimmet mellomrom på linjeslutt, linjeskift til slutt.
 
 Dokumentasjon:
