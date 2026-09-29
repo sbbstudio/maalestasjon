@@ -49,7 +49,7 @@ Innsamling og analyse er **skilt**. Det betyr at analysen kan kjøres på nytt m
 
 ## Regler og beslutninger
 
-- Lokale regler for mennesker og agenter: [`AGENTS.md`](AGENTS.md). Felles regler: byggestandarden i always-agents.
+- Lokale regler for mennesker og agenter: [`AGENTS.md`](AGENTS.md). Felles byggeregler ligger utenfor repoet.
 - Beslutninger: [`docs/decisions/`](docs/decisions/), én fil per beslutning.
 - Endringer: [`CHANGELOG.md`](CHANGELOG.md).
 
